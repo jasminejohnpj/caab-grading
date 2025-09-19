@@ -4,37 +4,9 @@ import laws from "../model/law.js";
 import Questions from "../model/questions.js";
 import { ValidationError, UniqueConstraintError } from "sequelize";
 
-// export const Department = async (req, res, next) => {
-//   try {
-//     const { department_name, department_type, appropriate_govt } = req.body;
-//     console.log(department_name, department_type, appropriate_govt)
-//     const newDepartment = await department.create({
-//       department_name,
-//       department_type,
-//       appropriate_govt,
-//     });
 
-//     return res.status(201).json({
-//       message: "Department added successfully",
-//       department: newDepartment,
-//     });
 
-//   } catch (error) {
-//     if (error instanceof UniqueConstraintError) {
-//       return res.status(409).json({
-//         message: "Department with this name already exists",
-//       });
-//     }
 
-//     if (error instanceof ValidationError) {
-//       return res.status(400).json({
-//         message: error.errors.map((e) => e.message).join(", "),
-//       });
-//     }
-
-//     next(error);
-//   }
-// };
 
 export const Department = async (req, res, next) => {
   try {
@@ -72,9 +44,6 @@ export const Department = async (req, res, next) => {
     next(error.message);
   }
 };
-
-
-
 
 export const Departments = async (req, res, next) => {
   try {
@@ -218,6 +187,8 @@ export const getDepartmentsByBusinessType = async (req, res, next) => {
 
 
 
+
+
 export const Businesstype = async (req, res, next) => {
   try {
     const { business_type, department_name } = req.body;
@@ -325,7 +296,6 @@ export const removeBusinesstype = async (req, res, next) => {
   }
 }
 
-
 export const businesstypeByid = async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -348,6 +318,8 @@ export const businesstypeByid = async (req, res, next) => {
 
   }
 }
+
+
 
 
 
@@ -448,6 +420,9 @@ export const deleteLaw = async (req, res, next) => {
     next(error);
   }
 }
+
+
+
 
 export const NewQuestions = async (req, res, next) => {
   try {
@@ -671,9 +646,236 @@ export const companies = async (req, res, next) => {
   }
 }
 
+export const grading = async(req , res, next) =>{
+  try {
+    const { branch_id } = req.body;
+
+        if (!branch_id) {
+      return res.status(400).json({ message: "Branch ID not found" });
+    }
+
+    const branchResponses = await questionResponse.findAll({ where: { branch_id } });
+
+    if (!branchResponses || branchResponses.length === 0) {
+      return res.status(204).json({ message: "No responses found" });
+    }
+
+    const validResponses = branchResponses.filter(response => {
+      const res = response.response?.trim().toLowerCase();
+      return res === "yes" || res === "no";
+    });
+
+    let allGravityCounts = { high: 0, medium: 0, low: 0 };
+    let yesGravityCounts = { high: 0, medium: 0, low: 0 };
+
+    validResponses.forEach(response => {
+      let normalizedResponse = response.response?.trim().toLowerCase();
+      let normalizedGravity = response.gravity?.trim().toLowerCase();
+
+      // Count gravity levels for all "yes" and "no" responses
+      if (normalizedGravity === "high") allGravityCounts.high++;
+      else if (normalizedGravity === "medium") allGravityCounts.medium++;
+      else if (normalizedGravity === "low") allGravityCounts.low++;
+
+      // Count gravity levels for "yes" responses only
+      if (normalizedResponse === "yes") {
+        if (normalizedGravity === "high") yesGravityCounts.high++;
+        else if (normalizedGravity === "medium") yesGravityCounts.medium++;
+        else if (normalizedGravity === "low") yesGravityCounts.low++;
+      }
+    });
+    // Calculate weighted scores
+    const validHigh = allGravityCounts.high * 10;
+    const validMedium = allGravityCounts.medium * 5;
+    const validLow = allGravityCounts.low * 3;
+    const validTotal = validHigh + validMedium + validLow;
+
+    const yesHigh = yesGravityCounts.high * 10;
+    const yesMedium = yesGravityCounts.medium * 5;
+    const yesLow = yesGravityCounts.low * 3;
+    const yesTotal = yesHigh + yesMedium + yesLow;
+
+    // Calculate percentage of "yes" responses
+    // const gravityPercentage = validTotal > 0 ? (yesTotal / validTotal) * 100 : 0;
+
+    const gravityPercentage = validTotal > 0 ? Math.floor((yesTotal / validTotal) * 100) : 0;
 
 
+  const totalcount  = branchResponses.filter(response => {
+    const res = response.response?.trim().toLowerCase();
+    return res === "yes" || res === "no";
+    }).length;
+  const yesCount = branchResponses.filter(response => {
+    const res = response.response?.trim().toLowerCase();
+    return res === "yes"; // Correct comparison
+    }).length;
 
+    const completedPercentage = yesCount/totalcount * 100;
+    // Generate report for "no" responses
+    const Report = validResponses
+      .filter(response => response.response?.trim().toLowerCase() === "no")
+      .map(response => ({
+        section: response.section,
+        questions: response.questions
+      }));
+
+    return res.status(200).json({
+      gravityPercentage,
+      Report,
+      completedPercentage,
+      
+    });
+
+  } catch(error){
+    next(error.message);
+  }
+}
+
+export const gradingDetails = async(req, res, next)=>{
+   try{
+    const {branch_id } = req.params;
+    if (!branch_id) {
+      return res.status(400).json({ message: "Branch ID not found" });
+    }
+
+    const branchResponses = await questionResponse.findAll({ where: { branch_id } });
+
+    if (!branchResponses || branchResponses.length === 0) {
+      return res.status(404).json({ message: "No responses found" });
+    }
+
+    const validResponses = branchResponses.filter(response => {
+      const res = response.response?.trim().toLowerCase();
+      return res === "yes" || res === "no";
+    });
+
+    let allGravityCounts = { high: 0, medium: 0, low: 0 };
+    let yesGravityCounts = { high: 0, medium: 0, low: 0 };
+
+    validResponses.forEach(response => {
+      let normalizedResponse = response.response?.trim().toLowerCase();
+      let normalizedGravity = response.gravity?.trim().toLowerCase();
+
+      if (normalizedGravity === "high") allGravityCounts.high++;
+      else if (normalizedGravity === "medium") allGravityCounts.medium++;
+      else if (normalizedGravity === "low") allGravityCounts.low++;
+
+      if (normalizedResponse === "yes") {
+        if (normalizedGravity === "high") yesGravityCounts.high++;
+        else if (normalizedGravity === "medium") yesGravityCounts.medium++;
+        else if (normalizedGravity === "low") yesGravityCounts.low++;
+      }
+    });
+    // Calculate weighted scores
+    const validHigh = allGravityCounts.high * 10;
+    const validMedium = allGravityCounts.medium * 5;
+    const validLow = allGravityCounts.low * 3;
+    const validTotal = validHigh + validMedium + validLow;
+
+    const yesHigh = yesGravityCounts.high * 10;
+    const yesMedium = yesGravityCounts.medium * 5;
+    const yesLow = yesGravityCounts.low * 3;
+    const yesTotal = yesHigh + yesMedium + yesLow;
+
+    // Calculate percentage of "yes" responses
+    const gravityPercentage = validTotal > 0 ? ((yesTotal / validTotal) * 100).toFixed(2) : "0.00";
+    const NegativeCount = branchResponses.filter(response => {
+      const res = response.response?.trim().toLowerCase();
+      return res === "no"; 
+    }).length;
+
+    return res.status(200).json({ gravityPercentage, NegativeCount });
+
+  } catch(error){
+    next(error.message)
+  }
+}
+
+export const Role = async(req, res,next)=>{
+  try {
+    const { role_name, access, allowed_routes } = req.body;
+    const roledata = await roles.create({
+      role_name,
+      access,
+      allowed_routes,
+    });
+    return res.status(200).json({ message: "Role created successfully", roledata });
+  } catch(error){
+    next(error.message)
+  }
+}
+
+export const listRoles = async(req, res, next)=>{
+   try {
+    const data = await roles.findAll();
+    return res.status(200).json({ message: "List of roles", data });
+  } catch(error){
+    next(error.message);
+  }
+}
+
+export const getRoleById= async(req, res, next)=>{
+   try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(404).json({ message: "id required" });
+    }
+    const role = await roles.findOne({ where: { id } });
+    if (!role) {
+      return res.status(204).json({ message: "role not existing" });
+    }
+    return res.status(200).json({ message: "role listed:", role });
+  } catch(error){
+    next(error.message)
+  }
+}
+
+export const updateRole = async(req, res, next) =>{
+   try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ message: "id required" });
+    }
+    const { role_name, access, allowedRoutes } = req.body;
+    if (
+      !role_name ||
+      !access ||
+      !allowedRoutes ||
+      role_name.trim() === "" ||
+      access.length === 0 ||
+      allowedRoutes.length === 0
+    ) {
+      return res
+        .status(401)
+        .json({ message: "role name, access, allowedRoutes are required" });
+    }
+    const role = await roles.findOne({ where: { id } });
+    if (!role) {
+      return res.status(204).json({ message: "role does not exist" });
+    }
+    await roles.update({ role_name, access, allowedRoutes }, { where: { id } });
+    return res.status(200).json({ message: "role updated successfully" });
+  } catch(error){
+    next(error)
+  }
+}
+
+export const deleteRole= async(req, res, next)=>{
+  try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(404).json({ message: "id is required" });
+    }
+    const role = await roles.findOne({ where: { id } });
+    if (!role) {
+      return res.status(204).json({ message: "Role does not exists" });
+    }
+    await role.destroy();
+    return res.status(200).json({ message: "Role deleted successfully" });
+  } catch(error){
+    next(error.message)
+  }
+}
 
 
 

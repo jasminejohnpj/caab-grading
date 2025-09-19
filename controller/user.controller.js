@@ -1,7 +1,7 @@
 import User from "../model/user.js";
 import branchAdmin from "../model/branchAdmin.js";
 import questionResponse from "../model/response.js";
-
+import documents from "../model/document.js";
 
 // In-memory OTP store (use Redis in production)
 const otpStore = new Map();
@@ -140,6 +140,9 @@ export const superadminOtp = async (req, res, next) => {
   }
 };
 
+
+/////////////// branches //////////////////////////
+
 export const branch =async(req, res, next) =>{
     try {
         const { caab_id, branch_name, branch_email, branch_mobile_no, branch_admin_name, admin_no, admin_email, city, district, business_type, no_female, total_employees, no_contract, no_migrant ,role } = req.body;
@@ -232,4 +235,241 @@ export const branchDetails = async(req, res, next) =>{
         next(error.message)
     }
 }
+
+export const updateBranch = async(req, res, next) =>{
+    try {
+        const { branch_id } = req.params;
+        const newdata = req.body;
+        const branch = await branchAdmin.findOne({ where: { branch_id } });
+        if (!branch) {
+            return res.status(204).json({ message: "Branch details not found" });
+        }
+        await branchAdmin.update(newdata, { where: { branch_id } });
+
+        return res.status(200).json({ message: "Branch details updated successfully" });
+    } catch(error){
+        next(error.message)
+    }
+}
+
+export const removeBranch = async(req, res, next) =>{
+     try {
+        const { branch_id } = req.params;
+
+        if (!branch_id) {
+            return res.status(400).json({ message: "Admin email is required" });
+        }
+
+        const branch = await branchAdmin.findOne({ where: { branch_id } });
+        if (!branch) {
+            return res.status(204).json({ message: "Branch not found" });
+        }
+
+        await branch.destroy();
+        return res.status(200).json({ message: "Branch deleted successfully" });
+    } catch(error){
+        next(error.message)
+    }
+}
+
+
+/////////// document uploading ///////////////
+
+export const document = async(req, res, next) =>{
+    try {
+        const { branch_id, department_name, document_description, issue_date, expiry_date, licence_no, licence_authority, document_link } = req.body;
+        if (!branch_id || !document_link) {
+            return res.status(401).json({ message: "branch id and documents are required" });
+        }
+        const branch = await branchAdmin.findOne({ where: { branch_id } });
+        if (!branch) {
+            return res.status(403).json({ message: "branch not found" });
+        }
+        const newDocument = await documents.create({
+            branch_id,
+            department_name,
+            document_description,
+            issue_date,
+            expiry_date,
+            licence_no,
+            licence_authority,
+            document_link
+        });
+        return res.status(200).json({ message: "document uploaded successfully" });
+    } catch(error){
+        next(error.message)
+    }
+}
+
+export const updateDocument =  async(req, res, next )=>{
+    try{
+        const { id } = req.params;
+        const newdata = req.body;
+        const document = await documents.findOne({ where: { id } });
+        if (!document) {
+            return res.status(204).json({ message: "document not found" });
+        }
+        await documents.update(newdata, { where: { id } });
+
+        return res.status(200).json({ message: "document updated successfully" });
+   
+    } catch(error){
+        next (error.message);
+    }
+}
+
+export const removeDocument = async(req, res, next) =>{
+    try {
+        const id = req.params.id;
+        if (!id) {
+            return res.status(401).json({ message: "id required" });
+        }
+        const doc = await documents.findOne({ where: { id } });
+        if (!doc) {
+            return res.status(204).json({ message: "document not found" });
+        }
+        await documents.destroy({ where: { id } });
+        return res.status(200).json({ message: "document deleted successfully" });
+    } catch(error){
+        next(error.message)
+    }
+}
+
+export const branchDocuments = async(req, res, next)=>{
+    try {
+        const { branch_id } = req.params;
+        const branch = await branchAdmin.findOne({ where: { branch_id } });
+        if (!branch) {
+            return res.status(204).json({ message: "branch id is invalid" });
+        }
+        const docs = await documents.findAll({ where: { branch_id } });
+        if (!docs) {
+            return res.status(204).json({ message: "documents not found" });
+
+        }
+        return res.status(200).json({ message: "uploaded documents are", data: docs });
+
+    } catch(error){
+        next(error.message);
+    }
+}
+
+export const documentById = async(req, res, next)=>{
+     try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(401).json({ message: "id is required" });
+        }
+        const docs = await documents.findAll({ where: { id } });
+        if (!docs) {
+            return res.status(204).json({ message: "invalid id" });
+        }
+        return res.status(200).json({ data: docs });
+    } catch(error){
+        next(error.message)
+    }
+}
+
+export const evaluationResponse = async(req, res, next) =>{
+    try {
+      const { inputdata } = req.body; 
+  
+      if (!inputdata || !Array.isArray(inputdata) || inputdata.length === 0) {
+        return res.status(400).json({ message: "Input data must be a non-empty array" });
+      }
+  
+      const branch_id = inputdata[0].branch_id;
+  
+      if (!branch_id) {
+        return res.status(400).json({ message: "Branch ID is required" });
+      }
+  
+      const branch = await branchAdmin.findOne({
+        where: { branch_id },
+      });
+  
+      if (!branch) {
+        return res.status(404).json({ message: "Branch not found" });
+      }
+  
+      const newResponses = await questionResponse.bulkCreate(
+        inputdata.map((data) => ({
+          branch_id: data.branch_id,
+          section: data.section,
+          questions: data.questions,
+          gravity: data.gravity,
+          response: data.response,
+        }))
+      );
+  
+      return res.status(200).json({
+        message: "Responses added successfully",
+      });
+    } catch(error){
+        next(error.message)
+    }
+};
+
+export const viewResponse= async(req, res, next)=>{
+    try{
+
+        const branch_id = req.params;
+        if(!branch_id){
+            return res.status(400).json({message:"branch id is required"});
+        }
+        const response = await questionResponse.findAll({where: branch_id});
+        if(!response){
+            return res.status(204).json("no response data found");
+        }
+        return res.status(200).json({message:"branch response",response});
+    } catch(error){
+        next(error)
+    }
+}
+
+export const updateResponse = async(req, res, next)=>{
+    try {
+        const { inputdata } = req.body;
+        const { branch_id } = req.params;
+
+        if (!Array.isArray(inputdata) || inputdata.length === 0) {
+            return res.status(400).json({ message: "Input data must be a non-empty array" });
+        }
+
+        if (!branch_id) {
+            return res.status(400).json({ message: "Branch ID is required" });
+        }
+
+        // Validate all records
+        for (const record of inputdata) {
+            if (!record.id) {
+                return res.status(400).json({ message: "Each record must have an ID for updating" });
+            }
+        }
+
+        // Check if branch exists
+        const branchExists = await questionResponse.count({ where: { branch_id } });
+        if (branchExists === 0) {
+            return res.status(404).json({ message: "Branch not found" });
+        }
+
+        // Perform batch update using bulkCreate
+        await questionResponse.bulkCreate(inputdata, {
+            updateOnDuplicate: ["section", "questions", "gravity", "response"]
+        });
+
+        return res.status(200).json({ message: "Responses updated successfully" });
+    } catch(error){
+        next(error)
+    }
+}
+
+
+
+
+
+
+
+
+
 

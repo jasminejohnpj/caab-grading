@@ -3,8 +3,7 @@ import {
     Department, Departments, updateDepartment, removeDept, deptById, listDept, getDepartmentsByBusinessType,
     Businesstype, businessTypes, updateBusinessType, removeBusinesstype, businesstypeByid,
     newLaw, listLaws, updateLaw, deleteLaw, NewQuestions, questions, deleteQuestions, evaluation,
-    listSections, companies
-} from "../controller/admin.controller.js";
+    listSections, companies ,grading , gradingDetails, Role , listRoles , updateRole , deleteRole ,getRoleById} from "../controller/admin.controller.js";
 import { verifyToken } from "../middleware/verifytoken.js";
 
 const adminRouter = Router();
@@ -40,4 +39,13 @@ adminRouter.get('/evaluationQuestions', verifyToken, evaluation);
 
 adminRouter.get('/listSections', verifyToken, listSections);
 adminRouter.get('/listCompanies', verifyToken, companies);
+adminRouter.post('/grading',grading);
+adminRouter.get('/gradingDetails/:branch_id', gradingDetails);
+
+
+adminRouter.post('/createRole', Role);
+adminRouter.get('/listRoles',listRoles);
+adminRouter.put('/updateRole/:id', updateRole);
+adminRouter.delete('/deleteRoleById/:id',deleteRole);
+adminRouter.get('/getRoleById/:id',getRoleById)
 export default adminRouter;
