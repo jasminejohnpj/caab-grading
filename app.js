@@ -5,6 +5,7 @@ import connectToDatabase from './database/sql.js';
 import authRouter from './routes/auth.routes.js';
 import adminRouter from './routes/admin.routes.js';
 import userRouter from './routes/user.routes.js';
+import multiuploadRouter from './routes/multiupload.routes.js';
 const app = express();
 
 const corsOptions = {
@@ -20,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/user', userRouter);
-
+app.use('/api/v1/upload', multiuploadRouter);
 
 
 app.get('/', (req, res) => {

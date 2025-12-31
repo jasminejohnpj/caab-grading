@@ -2,7 +2,8 @@
   "name": "caab-new",
   "version": "0.0.0",
   "private": true,
-   "scripts": {
+  "type": "module",
+  "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js"
   },
@@ -15,8 +16,10 @@
     "express": "~4.16.1",
     "jsonwebtoken": "^9.0.2",
     "morgan": "~1.9.1",
+    "multer": "^2.0.2",
     "mysql2": "^3.14.5",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

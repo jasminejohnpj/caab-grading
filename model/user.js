@@ -70,7 +70,7 @@ const User = sequelize.define(
         },
         role: {
             type: DataTypes.STRING(500),
-            allowNull: false,
+            allowNull: true,
             validate: {
                 notEmpty: { msg: "role cannot be empty" },
                 len: {

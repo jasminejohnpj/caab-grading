@@ -2,8 +2,7 @@ import User from "../model/user.js";
 import branchAdmin from "../model/branchAdmin.js";
 import questionResponse from "../model/response.js";
 import documents from "../model/document.js";
-
-// In-memory OTP store (use Redis in production)
+import businesstype from "../model/businesstype.js";
 const otpStore = new Map();
 
 const normalizeMobile = (mobile) => {
@@ -18,6 +17,8 @@ const normalizeMobile = (mobile) => {
 export const companyInfo = async (req, res, next) => {
     try {
         const { caab_id } = req.params;
+
+        console.log(caab_id, "..enter...")
         if (!caab_id) {
             return res.status(400).json({ message: "caab id is required" });
         }
@@ -43,8 +44,7 @@ export const companyInfo = async (req, res, next) => {
 
         return res.status(200).json({ message: "company details ", companyInfo });
     } catch (error) {
-        console.log(error);
-        return res.status(500).json({ message: "Internal server error", error });
+        next(error.message);
     }
 }
 
@@ -84,8 +84,8 @@ export const generateOtp = async (req, res, next) => {
       message: "OTP sent successfully",
       otpForTesting: otp,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    next(error.message);
   }
 };
 
@@ -136,7 +136,7 @@ export const superadminOtp = async (req, res, next) => {
       phone: [existingUser.mobile],
     });
   } catch (error) {
-    next(error);
+    next(error.message);
   }
 };
 
@@ -423,7 +423,7 @@ export const viewResponse= async(req, res, next)=>{
         }
         return res.status(200).json({message:"branch response",response});
     } catch(error){
-        next(error)
+        next(error.message)
     }
 }
 
@@ -440,33 +440,98 @@ export const updateResponse = async(req, res, next)=>{
             return res.status(400).json({ message: "Branch ID is required" });
         }
 
-        // Validate all records
         for (const record of inputdata) {
             if (!record.id) {
                 return res.status(400).json({ message: "Each record must have an ID for updating" });
             }
         }
 
-        // Check if branch exists
         const branchExists = await questionResponse.count({ where: { branch_id } });
         if (branchExists === 0) {
             return res.status(404).json({ message: "Branch not found" });
         }
 
-        // Perform batch update using bulkCreate
         await questionResponse.bulkCreate(inputdata, {
             updateOnDuplicate: ["section", "questions", "gravity", "response"]
         });
 
         return res.status(200).json({ message: "Responses updated successfully" });
     } catch(error){
-        next(error)
+        next(error.message)
     }
 }
 
 
 
 
+
+export const businessTypes = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+
+    if (page <= 0 || pageSize <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Page and page size must be positive integers" });
+    }
+
+    const totalCount = await businesstype.count();
+
+    const totalPages = Math.ceil(totalCount / pageSize);
+    if (page > totalPages) {
+      return res.status(200).json({
+        message: "No businessType found for this page",
+        businessType: [],
+        totalPages,
+        totalCount,
+      });
+    }
+
+    const offset = (page - 1) * pageSize;
+    const allBusinessType = await businesstype.findAll({
+      order: [["id", "DESC"]],
+      limit: pageSize,
+      offset: offset,
+    });
+    return res.status(200).json({
+      message: "List of businesstype",
+      businessType: allBusinessType,
+      totalPages,
+      totalCount,
+    });
+  } catch (error) {
+    next(error.message);
+  }
+}
+
+export const getDepartmentsByBusinessType = async (req, res, next) => {
+  try {
+    const businessType = req.params.business_type;
+
+    if (!businessType) {
+      return res.status(400).send("Business type is required");
+    }
+
+    const departments = await businesstype.findAll({
+      where: { business_type: businessType },
+      attributes: ["department_name"],
+      raw: true, // return plain objects
+    });
+
+    if (!departments || departments.length === 0) {
+      return res.status(404).send("No departments found under this business type");
+    }
+
+    const departmentNamesString = departments
+      .map((dept) => dept.department_name)
+      .join(", ");
+
+    res.send(departmentNamesString);
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 

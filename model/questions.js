@@ -10,9 +10,20 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
 const Questions = sequelize.define(
     "Questions",
     {
+        act_rule: {
+            type: DataTypes.STRING(500),
+            allowNull: true,
+            validate: {
+                notEmpty: { msg: "act/rule cannot be empty" },
+                len: {
+                    args: [2, 500],
+                    msg: "act/rule must be between 2 and 500 characters",
+                },
+            },
+        },
         section: {
             type: DataTypes.STRING(500),
-            allowNull: false,
+            allowNull: true,
             validate: {
                 notEmpty: { msg: "section cannot be empty" },
                 len: {
@@ -23,7 +34,7 @@ const Questions = sequelize.define(
         },
         questions: {
             type: DataTypes.JSON,
-            allowNull: false,
+            allowNull: true,
             validate: {
                 notEmpty: { msg: "questions cannot be empty" },
                 len: {
@@ -34,7 +45,7 @@ const Questions = sequelize.define(
         },
         gravity: {
             type: DataTypes.STRING(500),
-            allowNull: false,
+            allowNull: true,
             validate: {
                 notEmpty: { msg: "gravity cannot be empty" },
                 len: {

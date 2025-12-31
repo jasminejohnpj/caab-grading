@@ -95,7 +95,7 @@ const branchAdmin = sequelize.define(
         },
         role: {
             type: DataTypes.STRING(100),
-            allowNull: false,
+            allowNull: true,
             validate: { notEmpty: { msg: "Role cannot be empty" } },
         },
     },

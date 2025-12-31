@@ -2,8 +2,12 @@ import department from "../model/department.js";
 import businesstype from "../model/businesstype.js";
 import laws from "../model/law.js";
 import Questions from "../model/questions.js";
-import { ValidationError, UniqueConstraintError } from "sequelize";
+import User from "../model/user.js";
+import branchAdmin from "../model/branchAdmin.js";
+import questionResponse from "../model/response.js";
 
+import { ValidationError, UniqueConstraintError } from "sequelize";
+import { Op } from "sequelize";
 
 
 
@@ -20,7 +24,6 @@ export const Department = async (req, res, next) => {
       return res.status(400).json({ message: "Missing field values" });
     }
 
-    // 🔍 Check if department already exists by name
     const existingDepartment = await department.findOne({
       where: { department_name },
     });
@@ -57,7 +60,7 @@ export const Departments = async (req, res, next) => {
     }
     return res.status(200).json(departmentNames);
   } catch (error) {
-    next(error);
+    next(error.message);
   }
 }
 
@@ -80,7 +83,7 @@ export const updateDepartment = async (req, res, next) => {
     return res.status(201).json({ message: " department updated successfully" });
   }
   catch (error) {
-    next(error);
+    next(error.message);
   }
 }
 
@@ -96,7 +99,7 @@ export const removeDept = async (req, res, next) => {
     await department_details.destroy();
     return res.status(200).json({ message: "department deleted successfully" });
   } catch (error) {
-    next(error)
+    next(error.message)
   }
 }
 
@@ -109,8 +112,7 @@ export const deptById = async (req, res, next) => {
     const dept = await department.findOne({ where: { id } });
     return res.status(200).json(dept)
   } catch (error) {
-    console.log(error)
-    return res.status(500).json({ message: "internal server error" })
+    next(error.message);
   }
 }
 
@@ -153,8 +155,7 @@ export const listDept = async (req, res, next) => {
       totalCount,
     });
   } catch (error) {
-    console.error("Error fetching department list:", error);
-    return res.status(500).json({ message: "Internal server error", error });
+    next(error.message);
   }
 }
 
@@ -175,13 +176,11 @@ export const getDepartmentsByBusinessType = async (req, res, next) => {
       return res.status(404).json({ message: "No departments found under this business type" });
     }
 
-    // Extract names into an array
     const departmentNames = departments.map((dept) => dept.department_name);
 
     return res.status(200).json({ departments: departmentNames });
   } catch (error) {
-    console.error("Error fetching departments:", error);
-    return res.status(500).json({ message: "Internal server error", error: error.message });
+    next(error.message);
   }
 };
 
@@ -241,7 +240,7 @@ export const businessTypes = async (req, res, next) => {
       totalCount,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error", error });
+    next(error.message);
   }
 }
 
@@ -275,7 +274,7 @@ export const updateBusinessType = async (req, res, next) => {
       .status(200)
       .json({ message: " updated successfully" });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error", error });
+    next(error.message);
   }
 }
 
@@ -292,7 +291,7 @@ export const removeBusinesstype = async (req, res, next) => {
     await data.destroy();
     return res.status(200).json({ message: "deleted successfully" });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error", error });
+    next(error.message);
   }
 }
 
@@ -313,9 +312,7 @@ export const businesstypeByid = async (req, res, next) => {
     })
   }
   catch (error) {
-    console.log(error)
-    return res.status(500).json({ message: "Internal server error", error });
-
+    next(error.message);
   }
 }
 
@@ -339,8 +336,7 @@ export const newLaw = async (req, res, next) => {
     return res.status(200).json({ message: "law created successfully" });
 
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "internal server error" });
+    next(error.message);
   }
 }
 
@@ -379,7 +375,7 @@ export const listLaws = async (req, res, next) => {
       totalCount,
     });
   } catch (error) {
-    return res.status(500).json({ message: "internal server error" });
+    next(error.message);
   }
 }
 
@@ -400,7 +396,7 @@ export const updateLaw = async (req, res, next) => {
     await existinglaw.update(newdata);
     return res.status(200).json({ message: "law updated successfully" });
   } catch (error) {
-    return res.status(500).json({ message: "internal server error", error })
+    next(error.message);
   }
 }
 
@@ -417,7 +413,7 @@ export const deleteLaw = async (req, res, next) => {
     await existinglaw.destroy();
     return res.status(200).json({ message: "law deleted successfully" });
   } catch (error) {
-    next(error);
+    next(error.message);
   }
 }
 
@@ -426,20 +422,31 @@ export const deleteLaw = async (req, res, next) => {
 
 export const NewQuestions = async (req, res, next) => {
   try {
-    const { section, questionsList } = req.body;
-    const newQuestions = await Questions.bulkCreate(
-      questionsList.map((q) => ({
-        section,
-        questions: q.questions,
-        gravity: q.gravity,
-      }))
-    );
+    const { act_rule, section, questionsList } = req.body;
 
-    return res.status(200).json({ message: "Questions added successfully" });
+    if (!act_rule || !section || !Array.isArray(questionsList) || questionsList.length === 0) {
+      return res.status(400).json({ message: "act_rule, section, and an array of questionsList are required" });
+    }
+
+    const newQuestions = questionsList.map((q) => ({
+      act_rule,
+      section,
+      questions: q.questions,
+      gravity: q.gravity,
+    }));
+
+    await Questions.bulkCreate(newQuestions);
+
+    return res.status(200).json({ 
+      message: "Questions added successfully", 
+      count: newQuestions.length 
+    });
+
   } catch (error) {
-    next(error)
+    next(error.message)
   }
-}
+};
+
 
 export const questions = async (req, res, next) => {
   try {
@@ -582,6 +589,49 @@ export const evaluation = async (req, res, next) => {
   }
 }
 
+
+export const departmentList = async (req, res, next) => {
+  try {
+    const dept = await department.findAll({
+      attributes: ["department_name"],
+      raw: true, 
+    });
+
+    const deptNames = dept.map(d => d.department_name);
+
+    if (deptNames.length === 0) {
+      return res.status(404).json({ message: "No departments found" });
+    }
+
+    return res.status(200).json(deptNames);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const searchBusinessType = async (req, res, next) => {
+  try {
+    const { keyValue } = req.query;
+
+    if (!keyValue || keyValue.trim() === "") {
+      return res.status(400).json({ message: "Search data is required" });
+    }
+
+    const results = await businesstype.findAll({
+      where: {
+        business_type: { [Op.like]: `${keyValue}%` },
+      },
+      attributes: ["business_type"],
+      raw: true,
+    });
+
+    const names = results.map((item) => item.business_type);
+
+    return res.status(200).json(names);
+  } catch (error) {
+    next(error);
+  }
+};
 ////////// caab admin /////////////
 
 
@@ -791,6 +841,9 @@ export const gradingDetails = async(req, res, next)=>{
   }
 }
 
+
+
+
 export const Role = async(req, res,next)=>{
   try {
     const { role_name, access, allowed_routes } = req.body;
@@ -879,3 +932,84 @@ export const deleteRole= async(req, res, next)=>{
 
 
 
+export const companyInfo = async (req, res, next) => {
+    try {
+        const { caab_id } = req.params;
+        if (!caab_id) {
+            return res.status(400).json({ message: "caab id is required" });
+        }
+        const company = await User.findOne({ where: { caab_id } });
+        if (!company) {
+            return res.status(204).json({ message: "Company not found" });
+        }
+        const noOfBranch = await branchAdmin.count({
+            where: { caab_id }
+        });
+        const branchData = await branchAdmin.findAll({
+            where: { caab_id },
+            attributes: ['business_type'],
+        });
+        const businessTypes = [...new Set(branchData.map(item => item.business_type))];
+        const selectedBusinessType = businessTypes.length > 0 ? businessTypes[0] : null;
+
+        const companyInfo = {
+            ...company.dataValues,
+            noOfBranch,
+            selectedBusinessType
+        };
+
+        return res.status(200).json({ message: "company details ", companyInfo });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Internal server error", error });
+    }
+}
+
+export const branchList = async(req, res, next)=>{
+    try {
+        const { caab_id } = req.params;
+
+        if (!caab_id) {
+            return res.status(401).json({ message: "caab id is required" });
+        }
+        const caabId = await branchAdmin.findOne({where:{caab_id}});
+        if(!caabId){
+            return res.status(204).json({message:"no branches found"});
+        }
+        const branches = await branchAdmin.findAll({ where: { caab_id } });
+
+        return res.status(200).json({ message: "branches are", branches });
+        
+    } catch(error){
+        next(error.message)
+    }
+}
+
+export const branchDetails = async(req, res, next) =>{
+    try {
+        const { branch_id } = req.params;
+        if(!branch_id){
+            return res.status(401).json({message:"branch id required"});
+        }
+        const branch = await branchAdmin.findOne({where:{branch_id}});
+        if(!branch){
+            return res.status(204).json({message:"Invalid branch id"});
+        }
+        const branchDetails = await branchAdmin.findAll({ where: { branch_id } });
+        if (!branchDetails) {
+            return res.status(204).json({ message: "branch details not found" });  
+        }
+
+        const branchResponses = await questionResponse.findAll({ where: { branch_id } });
+        const NegativeCount = branchResponses.filter(response => {
+            const res = response.response?.trim().toLowerCase();
+            return res === "no"; 
+          }).length;
+
+
+        return res.status(200).json({ message: "branch details are:", branchDetails ,NegativeCount});
+    }
+    catch (error) {
+        next(error.message)
+    }
+}

@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import caabAdmin from "../model/caabAdmin.js";
 import User from "../model/user.js";
 import branchAdmin from "../model/branchAdmin.js";
+import jwt from "jsonwebtoken";
 
 const otpStore = {};
 
@@ -62,6 +63,7 @@ export const adminLogin = async (req, res, next) => {
 export const userLogin = async (req, res, next) => {
   try {
     const { mobile } = req.body;
+    
     if (!mobile || !/^\d{10}$/.test(mobile)) {
       return res.status(401).json({ message: "Invalid mobile number" });
     }

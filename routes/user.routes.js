@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { companyInfo , editCompany ,generateOtp, superadminOtp , branch , branchList , branchDetails,
          updateBranch , removeBranch , document , updateDocument ,removeDocument , branchDocuments,
-        documentById , evaluationResponse , viewResponse , updateResponse} from '../controller/user.controller.js';
+        documentById , evaluationResponse , viewResponse , updateResponse, businessTypes, getDepartmentsByBusinessType} from '../controller/user.controller.js';
 
 const userRouter = Router();
 
@@ -28,4 +28,8 @@ userRouter.get('/documentById/:id',documentById);
 userRouter.post('/evaluationResponse', evaluationResponse);
 userRouter.get('/viewResponse/:branch_id',viewResponse);
 userRouter.put('/editResponses/:branch_id', updateResponse);
+
+userRouter.get('/listBusinessType', businessTypes);
+userRouter.get('/getDepartmentsByBusinessType/:business_type', getDepartmentsByBusinessType);
+
 export default userRouter;
