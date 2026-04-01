@@ -14,7 +14,6 @@ const Questions = sequelize.define(
             type: DataTypes.STRING(500),
             allowNull: true,
             validate: {
-                notEmpty: { msg: "act/rule cannot be empty" },
                 len: {
                     args: [2, 500],
                     msg: "act/rule must be between 2 and 500 characters",
@@ -25,7 +24,6 @@ const Questions = sequelize.define(
             type: DataTypes.STRING(500),
             allowNull: true,
             validate: {
-                notEmpty: { msg: "section cannot be empty" },
                 len: {
                     args: [2, 500],
                     msg: "section must be between 2 and 500 characters",
@@ -36,7 +34,6 @@ const Questions = sequelize.define(
             type: DataTypes.JSON,
             allowNull: true,
             validate: {
-                notEmpty: { msg: "questions cannot be empty" },
                 len: {
                     args: [2, 500],
                     msg: "questions must be between 2 and 500 characters",
@@ -47,7 +44,6 @@ const Questions = sequelize.define(
             type: DataTypes.STRING(500),
             allowNull: true,
             validate: {
-                notEmpty: { msg: "gravity cannot be empty" },
                 len: {
                     args: [2, 500],
                     msg: "gravity must be between 2 and 500 characters",
