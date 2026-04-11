@@ -41,7 +41,7 @@ export const uploadJson = async (req, res) => {
 
     const modelMap = {
       departments: department,
-    //  businesstypes: businesstype,
+       businesstypes: businesstype,
       laws: laws,
       questions: Questions,
     };

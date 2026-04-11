@@ -50,8 +50,8 @@ const laws = sequelize.define(
       validate: {
         notEmpty: { msg: "section cannot be empty" },
         len: {
-          args: [2, 500],
-          msg: "section must be between 2 and 500 characters",
+          args: [1, 500],
+          msg: "section must be between 1 and 500 characters",
         },
       },
 

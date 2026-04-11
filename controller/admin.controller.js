@@ -68,19 +68,17 @@ export const updateDepartment = async (req, res, next) => {
   try {
     const id = req.params.id;
     const { department_type, appropriate_govt } = req.body;
+    console.log(department_type, appropriate_govt);
     const dept = await department.findOne({ where: { id } });
     if (!dept) {
       return res.status(204).json({ message: "Department not found" });
     }
-    const new_data = await department.update(
-      {
-        department_type,
-        appropriate_govt
-      },
-      {
-        where: { id }
-      });
-    return res.status(201).json({ message: " department updated successfully" });
+   await dept.update({
+      department_type,
+      appropriate_govt,
+    });
+      console.log(dept);
+    return res.status(201).json({ message: " department updated successfully" , dept});
   }
   catch (error) {
     next(error.message);
