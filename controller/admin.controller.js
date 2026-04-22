@@ -85,6 +85,7 @@ export const updateDepartment = async (req, res, next) => {
   }
 }
 
+
 export const removeDept = async (req, res, next) => {
   try {
     const id = req.params.id;

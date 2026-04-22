@@ -8,5 +8,5 @@ authRouter.post('/newAdmin', createAdmin);
 authRouter.post('/adminLogin', adminLogin, generateToken);
 authRouter.post('/login', userLogin);
 authRouter.post('/verify-otp', verifyOtp);
-authRouter.post('/addCompany', company)
+authRouter.post('/addCompany', company,generateToken);
 export default authRouter;

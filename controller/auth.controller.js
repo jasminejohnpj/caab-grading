@@ -158,6 +158,44 @@ export const verifyOtp = async (req, res, next) => {
 }
 
 
+// export const company = async (req, res, next) => {
+//   try {
+//     const { email, user_name, company_name, mobile, employer_category, role } = req.body;
+
+//     const existingUser = await User.findOne({ where: { email, company_name } });
+//     if (existingUser) {
+//       return res.status(409).json({ message: "Company already registered" });
+//     }
+
+//     const latestUser = await User.findOne({
+//       order: [['caab_id', 'DESC']],
+//     });
+
+
+//     let newCaabId = "CAAB2001";
+
+//     if (latestUser && latestUser.caab_id) {
+//       const latestIdNumber = parseInt(latestUser.caab_id.slice(4), 10);
+//       newCaabId = `CAAB${(latestIdNumber + 1).toString().padStart(4, '0')}`;
+//     }
+//     const newUser = await User.create({
+//       caab_id: newCaabId,
+//       email,
+//       user_name,
+//       company_name,
+//       mobile,
+//       employer_category,
+//       role
+//     });
+
+//     return res.status(200).json({ message: "Company registered successfully", data: newUser });
+//   } catch (error) {
+//     console.log(error);
+//     next(error.message)
+//   }
+// }
+
+
 export const company = async (req, res, next) => {
   try {
     const { email, user_name, company_name, mobile, employer_category, role } = req.body;
@@ -171,13 +209,13 @@ export const company = async (req, res, next) => {
       order: [['caab_id', 'DESC']],
     });
 
-
     let newCaabId = "CAAB2001";
 
     if (latestUser && latestUser.caab_id) {
       const latestIdNumber = parseInt(latestUser.caab_id.slice(4), 10);
       newCaabId = `CAAB${(latestIdNumber + 1).toString().padStart(4, '0')}`;
     }
+
     const newUser = await User.create({
       caab_id: newCaabId,
       email,
@@ -188,15 +226,16 @@ export const company = async (req, res, next) => {
       role
     });
 
-    return res.status(200).json({ message: "Company registered successfully", data: newUser });
+    // ✅ Attach user to request for middleware
+    req.user = newUser;
+
+    next(); // pass control to token middleware
+
   } catch (error) {
     console.log(error);
-    next(error.message)
+    next(error);
   }
-}
-
-
-
+};
 
 
 
