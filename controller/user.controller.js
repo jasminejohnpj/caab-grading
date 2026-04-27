@@ -297,6 +297,7 @@ export const document = async(req, res, next) =>{
         });
         return res.status(200).json({ message: "document uploaded successfully" });
     } catch(error){
+        console.log(error.message);
         next(error.message)
     }
 }

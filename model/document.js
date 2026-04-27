@@ -97,16 +97,13 @@ const documents = sequelize.define(
       },
     },
 
-    document_link: {
-      type: DataTypes.STRING(500),
-      validate: {
-        notEmpty: { msg: "document link cannot be empty" },
-        len: {
-          args: [2, 500],
-          msg: "document link must be between 2 and 500 characters",
-        },
-      },
-    },
+document_link: {
+  type: DataTypes.TEXT, 
+  allowNull: false,
+  validate: {
+    notEmpty: { msg: "document link cannot be empty" }
+  }
+}
   },
   { timestamps: true }
 );
