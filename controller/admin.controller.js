@@ -444,23 +444,65 @@ export const NewQuestions = async (req, res, next) => {
 };
 
 
-export const questions = async (req, res, next) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
+// export const questions = async (req, res, next) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1;
+//     const pageSize = parseInt(req.query.pageSize) || 10;
 
+//     if (page <= 0 || pageSize <= 0) {
+//       return res
+//         .status(400)
+//         .json({ message: "Page and page size must be positive integers" });
+//     }
+
+//     const totalCount = await Questions.count();
+
+//     const totalPages = Math.ceil(totalCount / pageSize);
+//     if (page > totalPages) {
+//       return res.status(200).json({
+//         message: "No businessType found for this page",
+//         questions: [],
+//         totalPages,
+//         totalCount,
+//       });
+//     }
+
+//     const offset = (page - 1) * pageSize;
+//     const allQuestions = await Questions.findAll({
+//       order: [["id", "DESC"]],
+//       limit: pageSize,
+//       offset: offset,
+//     });
+//     console.log(allQuestions);
+//     return res.status(200).json({
+//       message: "Questions list",
+//       questions: allQuestions,
+//       totalPages,
+//       totalCount,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({ message: "Internal server error", error });
+//   }
+// }
+export const questions = async (req, res) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const pageSize = Number(req.query.pageSize) || 10;
+
+    // Validation
     if (page <= 0 || pageSize <= 0) {
-      return res
-        .status(400)
-        .json({ message: "Page and page size must be positive integers" });
+      return res.status(400).json({
+        message: "Page and pageSize must be positive numbers",
+      });
     }
 
     const totalCount = await Questions.count();
-
     const totalPages = Math.ceil(totalCount / pageSize);
-    if (page > totalPages) {
+
+    // If page exceeds
+    if (page > totalPages && totalCount !== 0) {
       return res.status(200).json({
-        message: "No businessType found for this page",
+        message: "No data found for this page",
         questions: [],
         totalPages,
         totalCount,
@@ -468,22 +510,30 @@ export const questions = async (req, res, next) => {
     }
 
     const offset = (page - 1) * pageSize;
-    const allQuestions = await Questions.findAll({
+
+    const questionsList = await Questions.findAll({
+      attributes: ["id", "act_rule", "section", "questions", "gravity"], 
       order: [["id", "DESC"]],
       limit: pageSize,
-      offset: offset,
+      offset,
     });
+
     return res.status(200).json({
-      message: "Questions list",
-      questions: allQuestions,
+      message: "Questions fetched successfully",
+      questions: questionsList,
       totalPages,
       totalCount,
+      currentPage: page,
+      pageSize,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error", error });
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
   }
-}
-
+};
 export const deleteQuestions = async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -835,9 +885,6 @@ export const gradingDetails = async(req, res, next)=>{
     next(error.message)
   }
 }
-
-
-
 
 export const Role = async(req, res,next)=>{
   try {
