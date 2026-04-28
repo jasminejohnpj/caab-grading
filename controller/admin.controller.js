@@ -43,7 +43,6 @@ export const Department = async (req, res, next) => {
       department: newDepartment,
     });
   } catch (error) {
-    console.error("Error adding department:", error);
     next(error.message);
   }
 };
@@ -68,7 +67,6 @@ export const updateDepartment = async (req, res, next) => {
   try {
     const id = req.params.id;
     const { department_type, appropriate_govt } = req.body;
-    console.log(department_type, appropriate_govt);
     const dept = await department.findOne({ where: { id } });
     if (!dept) {
       return res.status(204).json({ message: "Department not found" });
@@ -77,7 +75,6 @@ export const updateDepartment = async (req, res, next) => {
       department_type,
       appropriate_govt,
     });
-      console.log(dept);
     return res.status(201).json({ message: " department updated successfully" , dept});
   }
   catch (error) {
@@ -690,7 +687,6 @@ export const companies = async (req, res, next) => {
     });
 
   } catch (error) {
-    console.log(error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }
@@ -959,7 +955,6 @@ export const companyInfo = async (req, res, next) => {
 
         return res.status(200).json({ message: "company details ", companyInfo });
     } catch (error) {
-        console.log(error);
         return res.status(500).json({ message: "Internal server error", error });
     }
 }

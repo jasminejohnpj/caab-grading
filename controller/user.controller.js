@@ -18,7 +18,6 @@ export const companyInfo = async (req, res, next) => {
     try {
         const { caab_id } = req.params;
 
-        console.log(caab_id, "..enter...")
         if (!caab_id) {
             return res.status(400).json({ message: "caab id is required" });
         }
@@ -161,7 +160,6 @@ export const branch =async(req, res, next) =>{
         if (latestBranch.length > 0 && latestBranch[0].branch_id) {
             const latestIdNumber = parseInt(latestBranch[0].branch_id.slice(2));
             newBranchId = `br${(latestIdNumber + 1).toString()}`;
-            console.log(newBranchId);
         }
         const newBranch = await branchAdmin.create({
             caab_id,
@@ -297,7 +295,6 @@ export const document = async(req, res, next) =>{
         });
         return res.status(200).json({ message: "document uploaded successfully" });
     } catch(error){
-        console.log(error.message);
         next(error.message)
     }
 }

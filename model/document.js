@@ -10,21 +10,31 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
 const documents = sequelize.define(
   "documents",
   {
-    branch_id: {
-      type: DataTypes.STRING(500),
-      allowNull: false,
-      unique: {
-        msg: "branch id must be unique",
-      },
-      validate: {
-        notEmpty: { msg: "branch id cannot be empty" },
-        len: {
-          args: [2, 500],
-          msg: "branch id must be between 2 and 500 characters",
-        },
-      },
+    // branch_id: {
+    //   type: DataTypes.STRING(500),
+    //   allowNull: false,
+    //   unique: {
+    //     msg: "branch id must be unique",
+    //   },
+    //   validate: {
+    //     notEmpty: { msg: "branch id cannot be empty" },
+    //     len: {
+    //       args: [2, 500],
+    //       msg: "branch id must be between 2 and 500 characters",
+    //     },
+    //   },
+    // },
+branch_id: {
+  type: DataTypes.STRING(500),
+  allowNull: false,
+  validate: {
+    notEmpty: { msg: "branch id cannot be empty" },
+    len: {
+      args: [2, 500],
+      msg: "branch id must be between 2 and 500 characters",
     },
-
+  },
+},
     department_name: {
       type: DataTypes.STRING(500),
       allowNull: false,

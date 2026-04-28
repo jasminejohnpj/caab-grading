@@ -30,7 +30,6 @@ export const createAdmin = async (req, res, next) => {
     });
     return res.status(200).json({ message: "admin created successfully", newuser });
   } catch (error) {
-    console.log(error);
     next(error.message)
   }
 
@@ -55,7 +54,6 @@ export const adminLogin = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error(error);
     next(error.message)
   }
 };
@@ -190,7 +188,6 @@ export const verifyOtp = async (req, res, next) => {
 
 //     return res.status(200).json({ message: "Company registered successfully", data: newUser });
 //   } catch (error) {
-//     console.log(error);
 //     next(error.message)
 //   }
 // }
@@ -226,13 +223,11 @@ export const company = async (req, res, next) => {
       role
     });
 
-    // ✅ Attach user to request for middleware
     req.user = newUser;
 
-    next(); // pass control to token middleware
+    next(); 
 
   } catch (error) {
-    console.log(error);
     next(error);
   }
 };
