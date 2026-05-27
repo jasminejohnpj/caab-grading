@@ -142,48 +142,138 @@ export const superadminOtp = async (req, res, next) => {
 
 /////////////// branches //////////////////////////
 
-export const branch =async(req, res, next) =>{
-    try {
-        const { caab_id, branch_name, branch_email, branch_mobile_no, branch_admin_name, admin_no, admin_email, city, district, business_type, no_female, total_employees, no_contract, no_migrant ,role } = req.body;
-        const branch = await branchAdmin.findOne({ where: { admin_email: admin_email } });
-        if (branch) {
-            return res.status(401).json({ message: "branch already registered" });
-        }
+// export const branch =async(req, res, next) =>{
+//     try {
+//         const { caab_id, branch_name, branch_email, branch_mobile_no, branch_admin_name, admin_no, admin_email, city, district, business_type, no_female, total_employees, no_contract, no_migrant ,role } = req.body;
+//         const branch = await branchAdmin.findOne({ where: { admin_email: admin_email } });
+//         if (branch) {
+//             return res.status(401).json({ message: "branch already registered" });
+//         }
 
-        const latestBranch = await branchAdmin.findAll({
-            order: [['branch_id', 'desc']],
-            limit: 1
-        });
+//         const latestBranch = await branchAdmin.findAll({
+//             order: [['branch_id', 'desc']],
+//             limit: 1
+//         });
 
-        let newBranchId = "br1";
+//         let newBranchId = "br1";
 
-        if (latestBranch.length > 0 && latestBranch[0].branch_id) {
-            const latestIdNumber = parseInt(latestBranch[0].branch_id.slice(2));
-            newBranchId = `br${(latestIdNumber + 1).toString()}`;
-        }
-        const newBranch = await branchAdmin.create({
-            caab_id,
-            branch_id: newBranchId,
-            branch_name,
-            branch_email,
-            branch_mobile_no,
-            branch_admin_name,
-            admin_no,
-            admin_email,
-            city,
-            district,
-            business_type,
-            no_female,
-            total_employees,
-            no_contract,
-            no_migrant,
-            role
-        });
-        return res.status(200).json({ message: "branch added successfully" });
-    } catch(error){
-        next(error.message);
+//         if (latestBranch.length > 0 && latestBranch[0].branch_id) {
+//             const latestIdNumber = parseInt(latestBranch[0].branch_id.slice(2));
+//             newBranchId = `br${(latestIdNumber + 1).toString()}`;
+//         }
+//         const newBranch = await branchAdmin.create({
+//             caab_id,
+//             branch_id: newBranchId,
+//             branch_name,
+//             branch_email,
+//             branch_mobile_no,
+//             branch_admin_name,
+//             admin_no,
+//             admin_email,
+//             city,
+//             district,
+//             business_type,
+//             no_female,
+//             total_employees,
+//             no_contract,
+//             no_migrant,
+//             role
+//         });
+//         return res.status(200).json({ message: "branch added successfully" });
+//     } catch(error){
+//         next(error.message);
+//     }
+// }
+
+
+export const branch = async (req, res, next) => {
+  try {
+    const {
+      caab_id,
+      branch_name,
+      branch_email,
+      branch_mobile_no,
+      branch_admin_name,
+      admin_no,
+      admin_email,
+      city,
+      district,
+      business_type,
+      no_female,
+      total_employees,
+      no_contract,
+      no_migrant,
+      role,
+    } = req.body;
+
+    // Check existing branch admin email
+    const existingBranch = await branchAdmin.findOne({
+      where: { admin_email: admin_email },
+    });
+
+    if (existingBranch) {
+      return res.status(401).json({
+        message: "branch already registered",
+      });
     }
-}
+
+    // Fetch all branch ids
+    const allBranches = await branchAdmin.findAll({
+      attributes: ["branch_id"],
+    });
+
+    let maxId = 0;
+
+    // Find highest numeric id
+    allBranches.forEach((item) => {
+      if (item.branch_id) {
+        const numericPart = parseInt(
+          item.branch_id.replace("br", ""),
+          10
+        );
+
+        if (!isNaN(numericPart) && numericPart > maxId) {
+          maxId = numericPart;
+        }
+      }
+    });
+
+    // Generate next branch id
+    const newBranchId = `br${maxId + 1}`;
+
+    // Create branch
+    const newBranch = await branchAdmin.create({
+      caab_id,
+      branch_id: newBranchId,
+      branch_name,
+      branch_email,
+      branch_mobile_no,
+      branch_admin_name,
+      admin_no,
+      admin_email,
+      city,
+      district,
+      business_type,
+      no_female,
+      total_employees,
+      no_contract,
+      no_migrant,
+      role,
+    });
+
+    return res.status(200).json({
+      message: "branch added successfully",
+      data: newBranch,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
 
 export const branchList = async(req, res, next)=>{
     try {
