@@ -551,15 +551,94 @@ export const deleteQuestions = async (req, res, next) => {
   }
 }
 
+// export const evaluation = async (req, res, next) => {
+//   try {
+//     const { branch_id } = req.query;
+//     const page = parseInt(req.query.page) || 1;
+//     const pageSize = parseInt(req.query.pageSize) || 10;
+
+//     if (page <= 0 || pageSize <= 0) {
+//       return res.status(400).json({ message: "Page and page size must be positive integers" });
+//     }
+
+//     if (!branch_id) {
+//       return res.status(400).json({ message: 'Invalid or undefined "branch_id" parameter' });
+//     }
+
+//     const businessType = await branchAdmin.findAll({
+//       where: { branch_id },
+//       attributes: ['business_type']
+//     });
+
+//     if (!businessType || businessType.length === 0) {
+//       return res.status(404).json({ message: 'No business type found for the given branch_id' });
+//     }
+
+//     const { business_type } = businessType[0].dataValues;
+
+//     const departments = await businesstype.findAll({
+//       where: { business_type },
+//       attributes: ['department_name']
+//     });
+
+//     if (!departments || departments.length === 0) {
+//       return res.status(404).json({ message: 'No departments found for the given business type' });
+//     }
+
+//     const departmentNames = departments.map(dept => dept.department_name);
+
+//     const sections = await laws.findAll({
+//       where: {
+//         department_name: {
+//           [Op.in]: departmentNames,
+//         }
+//       },
+//       attributes: ['section']
+//     });
+
+//     if (!sections || sections.length === 0) {
+//       return res.status(404).json({ message: 'No related laws found for the given departments' });
+//     }
+
+//     const section = sections.map(law => law.section);
+
+//     const offset = (page - 1) * pageSize;
+
+//     const allQuestions = await Questions.findAll({
+//       where: { section },
+//       order: [["id", "DESC"]],
+//       limit: pageSize,
+//       offset: offset,
+//     });
+
+//     const totalCount = await Questions.count({ where: { section } });
+//     const totalPages = Math.ceil(totalCount / pageSize);
+
+//     if (page > totalPages) {
+//       return res.status(200).json({
+//         message: "No questions found for this page",
+//         questions: [],
+//         totalPages,
+//         totalCount,
+//       });
+//     }
+
+//     return res.status(200).json({
+//       message: "List of questions",
+//       questions: allQuestions,
+//       totalPages,
+//       totalCount,
+//     });
+
+//   } catch (error) {
+//     next(error);
+//   }
+// }
+
+
 export const evaluation = async (req, res, next) => {
   try {
     const { branch_id } = req.query;
-    const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
-
-    if (page <= 0 || pageSize <= 0) {
-      return res.status(400).json({ message: "Page and page size must be positive integers" });
-    }
 
     if (!branch_id) {
       return res.status(400).json({ message: 'Invalid or undefined "branch_id" parameter' });
@@ -602,32 +681,16 @@ export const evaluation = async (req, res, next) => {
 
     const section = sections.map(law => law.section);
 
-    const offset = (page - 1) * pageSize;
 
     const allQuestions = await Questions.findAll({
       where: { section },
       order: [["id", "DESC"]],
-      limit: pageSize,
-      offset: offset,
     });
 
-    const totalCount = await Questions.count({ where: { section } });
-    const totalPages = Math.ceil(totalCount / pageSize);
-
-    if (page > totalPages) {
-      return res.status(200).json({
-        message: "No questions found for this page",
-        questions: [],
-        totalPages,
-        totalCount,
-      });
-    }
 
     return res.status(200).json({
       message: "List of questions",
       questions: allQuestions,
-      totalPages,
-      totalCount,
     });
 
   } catch (error) {
